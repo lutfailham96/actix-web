@@ -1,104 +1,110 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;server.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>server.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;actix.rs&#x2F;favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a class="sidebar-logo" href="../../actix_web/index.html"><div class="logo-container"><img src="https:&#x2F;&#x2F;actix.rs&#x2F;img&#x2F;logo.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../actix_web/index.html"><img src="https:&#x2F;&#x2F;actix.rs&#x2F;img&#x2F;logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
-<span id="2">  2</span>
-<span id="3">  3</span>
-<span id="4">  4</span>
-<span id="5">  5</span>
-<span id="6">  6</span>
-<span id="7">  7</span>
-<span id="8">  8</span>
-<span id="9">  9</span>
-<span id="10"> 10</span>
-<span id="11"> 11</span>
-<span id="12"> 12</span>
-<span id="13"> 13</span>
-<span id="14"> 14</span>
-<span id="15"> 15</span>
-<span id="16"> 16</span>
-<span id="17"> 17</span>
-<span id="18"> 18</span>
-<span id="19"> 19</span>
-<span id="20"> 20</span>
-<span id="21"> 21</span>
-<span id="22"> 22</span>
-<span id="23"> 23</span>
-<span id="24"> 24</span>
-<span id="25"> 25</span>
-<span id="26"> 26</span>
-<span id="27"> 27</span>
-<span id="28"> 28</span>
-<span id="29"> 29</span>
-<span id="30"> 30</span>
-<span id="31"> 31</span>
-<span id="32"> 32</span>
-<span id="33"> 33</span>
-<span id="34"> 34</span>
-<span id="35"> 35</span>
-<span id="36"> 36</span>
-<span id="37"> 37</span>
-<span id="38"> 38</span>
-<span id="39"> 39</span>
-<span id="40"> 40</span>
-<span id="41"> 41</span>
-<span id="42"> 42</span>
-<span id="43"> 43</span>
-<span id="44"> 44</span>
-<span id="45"> 45</span>
-<span id="46"> 46</span>
-<span id="47"> 47</span>
-<span id="48"> 48</span>
-<span id="49"> 49</span>
-<span id="50"> 50</span>
-<span id="51"> 51</span>
-<span id="52"> 52</span>
-<span id="53"> 53</span>
-<span id="54"> 54</span>
-<span id="55"> 55</span>
-<span id="56"> 56</span>
-<span id="57"> 57</span>
-<span id="58"> 58</span>
-<span id="59"> 59</span>
-<span id="60"> 60</span>
-<span id="61"> 61</span>
-<span id="62"> 62</span>
-<span id="63"> 63</span>
-<span id="64"> 64</span>
-<span id="65"> 65</span>
-<span id="66"> 66</span>
-<span id="67"> 67</span>
-<span id="68"> 68</span>
-<span id="69"> 69</span>
-<span id="70"> 70</span>
-<span id="71"> 71</span>
-<span id="72"> 72</span>
-<span id="73"> 73</span>
-<span id="74"> 74</span>
-<span id="75"> 75</span>
-<span id="76"> 76</span>
-<span id="77"> 77</span>
-<span id="78"> 78</span>
-<span id="79"> 79</span>
-<span id="80"> 80</span>
-<span id="81"> 81</span>
-<span id="82"> 82</span>
-<span id="83"> 83</span>
-<span id="84"> 84</span>
-<span id="85"> 85</span>
-<span id="86"> 86</span>
-<span id="87"> 87</span>
-<span id="88"> 88</span>
-<span id="89"> 89</span>
-<span id="90"> 90</span>
-<span id="91"> 91</span>
-<span id="92"> 92</span>
-<span id="93"> 93</span>
-<span id="94"> 94</span>
-<span id="95"> 95</span>
-<span id="96"> 96</span>
-<span id="97"> 97</span>
-<span id="98"> 98</span>
-<span id="99"> 99</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-web/src/server.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>server.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../actix_web/index.html"><div class="logo-container"><img src="https://actix.rs/img/logo.png" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../actix_web/index.html"><div class="logo-container">
+                    <img src="https://actix.rs/img/logo.png" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../actix_web/index.html">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
@@ -675,12 +681,59 @@
 <span id="673">673</span>
 <span id="674">674</span>
 <span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">any::Any</span>,
     <span class="ident">cmp</span>, <span class="ident">fmt</span>, <span class="ident">io</span>,
     <span class="ident">marker::PhantomData</span>,
     <span class="ident">net</span>,
     <span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>},
+    <span class="ident">time::Duration</span>,
 };
 
 <span class="kw">use</span> <span class="ident">actix_http</span>::{<span class="ident">body::MessageBody</span>, <span class="ident">Extensions</span>, <span class="ident">HttpService</span>, <span class="ident">KeepAlive</span>, <span class="ident">Request</span>, <span class="ident">Response</span>};
@@ -694,6 +747,9 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rustls&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">actix_tls::accept::rustls::reexports::ServerConfig</span> <span class="kw">as</span> <span class="ident">RustlsServerConfig</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;openssl&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rustls&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">actix_http::TlsAcceptorConfig</span>;
+
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config::AppConfig</span>, <span class="ident">Error</span>};
 
 <span class="kw">struct</span> <span class="ident">Socket</span> {
@@ -704,8 +760,10 @@
 <span class="kw">struct</span> <span class="ident">Config</span> {
     <span class="ident">host</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">keep_alive</span>: <span class="ident">KeepAlive</span>,
-    <span class="ident">client_timeout</span>: <span class="ident">u64</span>,
-    <span class="ident">client_shutdown</span>: <span class="ident">u64</span>,
+    <span class="ident">client_request_timeout</span>: <span class="ident">Duration</span>,
+    <span class="ident">client_disconnect_timeout</span>: <span class="ident">Duration</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;openssl&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rustls&quot;</span>))]</span>
+    <span class="ident">tls_handshake_timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// An HTTP Server.</span>
@@ -765,9 +823,11 @@
             <span class="ident">factory</span>,
             <span class="ident">config</span>: <span class="ident">Arc::new</span>(<span class="ident">Mutex::new</span>(<span class="ident">Config</span> {
                 <span class="ident">host</span>: <span class="prelude-val">None</span>,
-                <span class="ident">keep_alive</span>: <span class="ident">KeepAlive::Timeout</span>(<span class="number">5</span>),
-                <span class="ident">client_timeout</span>: <span class="number">5000</span>,
-                <span class="ident">client_shutdown</span>: <span class="number">5000</span>,
+                <span class="ident">keep_alive</span>: <span class="ident">KeepAlive::default</span>(),
+                <span class="ident">client_request_timeout</span>: <span class="ident">Duration::from_secs</span>(<span class="number">5</span>),
+                <span class="ident">client_disconnect_timeout</span>: <span class="ident">Duration::from_secs</span>(<span class="number">1</span>),
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rustls&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;openssl&quot;</span>))]</span>
+                <span class="ident">tls_handshake_timeout</span>: <span class="prelude-val">None</span>,
             })),
             <span class="ident">backlog</span>: <span class="number">1024</span>,
             <span class="ident">sockets</span>: <span class="ident">Vec::new</span>(),
@@ -804,7 +864,7 @@
 
     <span class="doccomment">/// Set number of workers to start.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// By default, server uses number of available logical CPU as thread count.</span>
+    <span class="doccomment">/// By default, the number of available physical CPUs is used as the worker count.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">workers</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">num</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">builder</span>.<span class="ident">workers</span>(<span class="ident">num</span>);
         <span class="self">self</span>
@@ -877,9 +937,15 @@
     <span class="doccomment">/// To disable timeout set value to 0.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// By default client timeout is set to 5000 milliseconds.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_timeout</span>(<span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">client_timeout</span> <span class="op">=</span> <span class="ident">val</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_request_timeout</span>(<span class="self">self</span>, <span class="ident">dur</span>: <span class="ident">Duration</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">client_request_timeout</span> <span class="op">=</span> <span class="ident">dur</span>;
         <span class="self">self</span>
+    }
+
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;4.0.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Renamed to `client_request_timeout`.&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_timeout</span>(<span class="self">self</span>, <span class="ident">dur</span>: <span class="ident">Duration</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">client_request_timeout</span>(<span class="ident">dur</span>)
     }
 
     <span class="doccomment">/// Set server connection shutdown timeout in milliseconds.</span>
@@ -890,9 +956,33 @@
     <span class="doccomment">/// To disable timeout set value to 0.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// By default client timeout is set to 5000 milliseconds.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_shutdown</span>(<span class="self">self</span>, <span class="ident">val</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">client_shutdown</span> <span class="op">=</span> <span class="ident">val</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_disconnect_timeout</span>(<span class="self">self</span>, <span class="ident">dur</span>: <span class="ident">Duration</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">client_disconnect_timeout</span> <span class="op">=</span> <span class="ident">dur</span>;
         <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Set TLS handshake timeout.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Defines a timeout for TLS handshake. If the TLS handshake does not complete</span>
+    <span class="doccomment">/// within this time, the connection is closed.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// By default handshake timeout is set to 3000 milliseconds.</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;openssl&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rustls&quot;</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;openssl&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rustls&quot;</span>))))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tls_handshake_timeout</span>(<span class="self">self</span>, <span class="ident">dur</span>: <span class="ident">Duration</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">config</span>
+            .<span class="ident">lock</span>()
+            .<span class="ident">unwrap</span>()
+            .<span class="ident">tls_handshake_timeout</span>
+            .<span class="ident">replace</span>(<span class="ident">dur</span>);
+
+        <span class="self">self</span>
+    }
+
+    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+    <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;4.0.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Renamed to `client_disconnect_timeout`.&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_shutdown</span>(<span class="self">self</span>, <span class="ident">dur</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">client_disconnect_timeout</span>(<span class="ident">Duration::from_millis</span>(<span class="ident">dur</span>))
     }
 
     <span class="doccomment">/// Set server host name.</span>
@@ -968,8 +1058,8 @@
 
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">svc</span> <span class="op">=</span> <span class="ident">HttpService::build</span>()
                         .<span class="ident">keep_alive</span>(<span class="ident">c</span>.<span class="ident">keep_alive</span>)
-                        .<span class="ident">client_timeout</span>(<span class="ident">c</span>.<span class="ident">client_timeout</span>)
-                        .<span class="ident">client_disconnect</span>(<span class="ident">c</span>.<span class="ident">client_shutdown</span>)
+                        .<span class="ident">client_request_timeout</span>(<span class="ident">c</span>.<span class="ident">client_request_timeout</span>)
+                        .<span class="ident">client_disconnect_timeout</span>(<span class="ident">c</span>.<span class="ident">client_disconnect_timeout</span>)
                         .<span class="ident">local_addr</span>(<span class="ident">addr</span>);
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">handler</span>) <span class="op">=</span> <span class="ident">on_connect_fn</span>.<span class="ident">clone</span>() {
@@ -1026,14 +1116,12 @@
 
                     <span class="kw">let</span> <span class="ident">svc</span> <span class="op">=</span> <span class="ident">HttpService::build</span>()
                         .<span class="ident">keep_alive</span>(<span class="ident">c</span>.<span class="ident">keep_alive</span>)
-                        .<span class="ident">client_timeout</span>(<span class="ident">c</span>.<span class="ident">client_timeout</span>)
-                        .<span class="ident">client_disconnect</span>(<span class="ident">c</span>.<span class="ident">client_shutdown</span>)
+                        .<span class="ident">client_request_timeout</span>(<span class="ident">c</span>.<span class="ident">client_request_timeout</span>)
+                        .<span class="ident">client_disconnect_timeout</span>(<span class="ident">c</span>.<span class="ident">client_disconnect_timeout</span>)
                         .<span class="ident">local_addr</span>(<span class="ident">addr</span>);
 
                     <span class="kw">let</span> <span class="ident">svc</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">handler</span>) <span class="op">=</span> <span class="ident">on_connect_fn</span>.<span class="ident">clone</span>() {
-                        <span class="ident">svc</span>.<span class="ident">on_connect_ext</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">io</span>: <span class="kw-2">&amp;</span><span class="kw">_</span>, <span class="ident">ext</span>: <span class="kw">_</span><span class="op">|</span> {
-                            (<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">handler</span>)(<span class="ident">io</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Any</span>, <span class="ident">ext</span>)
-                        })
+                        <span class="ident">svc</span>.<span class="ident">on_connect_ext</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">io</span>: <span class="kw-2">&amp;</span><span class="kw">_</span>, <span class="ident">ext</span>: <span class="kw">_</span><span class="op">|</span> (<span class="ident">handler</span>)(<span class="ident">io</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Any</span>, <span class="ident">ext</span>))
                     } <span class="kw">else</span> {
                         <span class="ident">svc</span>
                     };
@@ -1042,10 +1130,15 @@
                         .<span class="ident">into_factory</span>()
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">into</span>().<span class="ident">error_response</span>());
 
+                    <span class="kw">let</span> <span class="ident">acceptor_config</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">c</span>.<span class="ident">tls_handshake_timeout</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">dur</span>) =&gt; <span class="ident">TlsAcceptorConfig::default</span>().<span class="ident">handshake_timeout</span>(<span class="ident">dur</span>),
+                        <span class="prelude-val">None</span> =&gt; <span class="ident">TlsAcceptorConfig::default</span>(),
+                    };
+
                     <span class="ident">svc</span>.<span class="ident">finish</span>(<span class="ident">map_config</span>(<span class="ident">fac</span>, <span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                         <span class="ident">AppConfig::new</span>(<span class="bool-val">true</span>, <span class="ident">host</span>.<span class="ident">clone</span>(), <span class="ident">addr</span>)
                     }))
-                    .<span class="ident">openssl</span>(<span class="ident">acceptor</span>.<span class="ident">clone</span>())
+                    .<span class="ident">openssl_with_config</span>(<span class="ident">acceptor</span>.<span class="ident">clone</span>(), <span class="ident">acceptor_config</span>)
                 })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
@@ -1087,8 +1180,8 @@
 
                     <span class="kw">let</span> <span class="ident">svc</span> <span class="op">=</span> <span class="ident">HttpService::build</span>()
                         .<span class="ident">keep_alive</span>(<span class="ident">c</span>.<span class="ident">keep_alive</span>)
-                        .<span class="ident">client_timeout</span>(<span class="ident">c</span>.<span class="ident">client_timeout</span>)
-                        .<span class="ident">client_disconnect</span>(<span class="ident">c</span>.<span class="ident">client_shutdown</span>);
+                        .<span class="ident">client_request_timeout</span>(<span class="ident">c</span>.<span class="ident">client_request_timeout</span>)
+                        .<span class="ident">client_disconnect_timeout</span>(<span class="ident">c</span>.<span class="ident">client_disconnect_timeout</span>);
 
                     <span class="kw">let</span> <span class="ident">svc</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">handler</span>) <span class="op">=</span> <span class="ident">on_connect_fn</span>.<span class="ident">clone</span>() {
                         <span class="ident">svc</span>.<span class="ident">on_connect_ext</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">io</span>: <span class="kw-2">&amp;</span><span class="kw">_</span>, <span class="ident">ext</span>: <span class="kw">_</span><span class="op">|</span> (<span class="ident">handler</span>)(<span class="ident">io</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Any</span>, <span class="ident">ext</span>))
@@ -1100,10 +1193,15 @@
                         .<span class="ident">into_factory</span>()
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">into</span>().<span class="ident">error_response</span>());
 
+                    <span class="kw">let</span> <span class="ident">acceptor_config</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">c</span>.<span class="ident">tls_handshake_timeout</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">dur</span>) =&gt; <span class="ident">TlsAcceptorConfig::default</span>().<span class="ident">handshake_timeout</span>(<span class="ident">dur</span>),
+                        <span class="prelude-val">None</span> =&gt; <span class="ident">TlsAcceptorConfig::default</span>(),
+                    };
+
                     <span class="ident">svc</span>.<span class="ident">finish</span>(<span class="ident">map_config</span>(<span class="ident">fac</span>, <span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                         <span class="ident">AppConfig::new</span>(<span class="bool-val">true</span>, <span class="ident">host</span>.<span class="ident">clone</span>(), <span class="ident">addr</span>)
                     }))
-                    .<span class="ident">rustls</span>(<span class="ident">config</span>.<span class="ident">clone</span>())
+                    .<span class="ident">rustls_with_config</span>(<span class="ident">config</span>.<span class="ident">clone</span>(), <span class="ident">acceptor_config</span>)
                 })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
@@ -1214,12 +1312,12 @@
             <span class="ident">fn_service</span>(<span class="op">|</span><span class="ident">io</span>: <span class="ident">UnixStream</span><span class="op">|</span> <span class="kw">async</span> { <span class="prelude-val">Ok</span>((<span class="ident">io</span>, <span class="ident">Protocol::Http1</span>, <span class="prelude-val">None</span>)) }).<span class="ident">and_then</span>({
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">svc</span> <span class="op">=</span> <span class="ident">HttpService::build</span>()
                     .<span class="ident">keep_alive</span>(<span class="ident">c</span>.<span class="ident">keep_alive</span>)
-                    .<span class="ident">client_timeout</span>(<span class="ident">c</span>.<span class="ident">client_timeout</span>)
-                    .<span class="ident">client_disconnect</span>(<span class="ident">c</span>.<span class="ident">client_shutdown</span>);
+                    .<span class="ident">client_request_timeout</span>(<span class="ident">c</span>.<span class="ident">client_request_timeout</span>)
+                    .<span class="ident">client_disconnect_timeout</span>(<span class="ident">c</span>.<span class="ident">client_disconnect_timeout</span>);
 
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">handler</span>) <span class="op">=</span> <span class="ident">on_connect_fn</span>.<span class="ident">clone</span>() {
                     <span class="ident">svc</span> <span class="op">=</span> <span class="ident">svc</span>
-                        .<span class="ident">on_connect_ext</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">io</span>: <span class="kw-2">&amp;</span><span class="kw">_</span>, <span class="ident">ext</span>: <span class="kw">_</span><span class="op">|</span> (<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">handler</span>)(<span class="ident">io</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Any</span>, <span class="ident">ext</span>));
+                        .<span class="ident">on_connect_ext</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">io</span>: <span class="kw-2">&amp;</span><span class="kw">_</span>, <span class="ident">ext</span>: <span class="kw">_</span><span class="op">|</span> (<span class="ident">handler</span>)(<span class="ident">io</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Any</span>, <span class="ident">ext</span>));
                 }
 
                 <span class="kw">let</span> <span class="ident">fac</span> <span class="op">=</span> <span class="ident">factory</span>()
@@ -1270,8 +1368,8 @@
                 <span class="ident">fn_service</span>(<span class="op">|</span><span class="ident">io</span>: <span class="ident">UnixStream</span><span class="op">|</span> <span class="kw">async</span> { <span class="prelude-val">Ok</span>((<span class="ident">io</span>, <span class="ident">Protocol::Http1</span>, <span class="prelude-val">None</span>)) }).<span class="ident">and_then</span>(
                     <span class="ident">HttpService::build</span>()
                         .<span class="ident">keep_alive</span>(<span class="ident">c</span>.<span class="ident">keep_alive</span>)
-                        .<span class="ident">client_timeout</span>(<span class="ident">c</span>.<span class="ident">client_timeout</span>)
-                        .<span class="ident">client_disconnect</span>(<span class="ident">c</span>.<span class="ident">client_shutdown</span>)
+                        .<span class="ident">client_request_timeout</span>(<span class="ident">c</span>.<span class="ident">client_request_timeout</span>)
+                        .<span class="ident">client_disconnect_timeout</span>(<span class="ident">c</span>.<span class="ident">client_disconnect_timeout</span>)
                         .<span class="ident">finish</span>(<span class="ident">map_config</span>(<span class="ident">fac</span>, <span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">config</span>.<span class="ident">clone</span>())),
                 )
             },
@@ -1351,5 +1449,5 @@
     <span class="prelude-val">Ok</span>(<span class="ident">builder</span>.<span class="ident">build</span>())
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (f8abed9ed 2021-12-26)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7425fb293 2022-06-30)" ></div>
 </body></html>
